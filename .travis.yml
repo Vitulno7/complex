@@ -1,0 +1,25 @@
+sudo: required
+service:
+  - docker
+
+before_install:
+  # Build test image.
+  - docker build -t vitulno7/complex-test -f ./client/Dockerfile.dev ./client
+
+script:
+  # Run tests.
+  - docker run -e CI=true vitulno7/complex-test npm test
+
+after_success:
+  # Build production images.
+  - docker build -t vitulno7/complex-client ./client
+  - docker build -t vitulno7/complex-nginx ./nginx
+  - docker build -t vitulno7/complex-server ./server
+  - docker build -t vitulno7/complex-worker ./worker
+  # Log in to docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Push images to docker hub
+  - docker push vitulno7/complex-client
+  - docker push vitulno7/complex-nginx
+  - docker push vitulno7/complex-server
+  - docker push vitulno7/complex-worker
